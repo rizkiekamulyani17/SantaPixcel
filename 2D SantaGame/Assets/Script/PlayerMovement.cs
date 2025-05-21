@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
     private SpriteRenderer sprite;
     private PlayerController playerController;
 
+    private float mobileInputX = 0f;
     private Vector2 moveInput;
 
     private enum MovementState { idle, walk, jump, fall, run }
@@ -23,8 +24,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask jumpableGround;
     private BoxCollider2D coll;
 
+    // Double jump logic
     private int jumpCounter = 0;
-    private int maxJumpCount = 2;
+    [SerializeField] private int maxJumpCount = 2;
 
     private void Awake()
     {
@@ -32,7 +34,6 @@ public class PlayerMovement : MonoBehaviour
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
         coll = GetComponent<BoxCollider2D>();
-
         playerController = new PlayerController();
     }
 
@@ -53,9 +54,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        moveInput = playerController.Movement.Move.ReadValue<Vector2>();
+        // Input handling
+        if (Application.isMobilePlatform)
+        {
+            moveInput = new Vector2(mobileInputX, 0f);
+        }
+        else
+        {
+            moveInput = playerController.Movement.Move.ReadValue<Vector2>();
+        }
 
-        // Reset jump counter when grounded
+        // Reset jumpCounter when grounded
         if (isGrounded())
         {
             jumpCounter = 0;
@@ -64,7 +73,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Vector2 targetVelocity = new Vector2(moveInput.x * moveSpeed, rb.velocity.y);
+        Vector2 targetVelocity = new Vector2((moveInput.x + mobileInputX) * moveSpeed, rb.velocity.y);
         rb.velocity = targetVelocity;
         UpdateAnimation();
     }
@@ -73,12 +82,14 @@ public class PlayerMovement : MonoBehaviour
     {
         MovementState state;
 
-        if (moveInput.x > 0f)
+        float horizontal = moveInput.x != 0 ? moveInput.x : mobileInputX;
+
+        if (horizontal > 0f)
         {
             state = MovementState.walk;
             sprite.flipX = false;
         }
-        else if (moveInput.x < 0f)
+        else if (horizontal < 0f)
         {
             state = MovementState.walk;
             sprite.flipX = true;
@@ -112,5 +123,21 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             jumpCounter++;
         }
+    }
+
+    // === MOBILE BUTTONS ===
+    public void MoveRight(bool isPressed)
+    {
+        mobileInputX = isPressed ? 1f : 0f;
+    }
+
+    public void MoveLeft(bool isPressed)
+    {
+        mobileInputX = isPressed ? -1f : 0f;
+    }
+
+    public void MobileJump()
+    {
+        Jump(); // Sama seperti di keyboard
     }
 }
