@@ -199,46 +199,73 @@ private void SetupNextButtonListener()
         scoreText.text = score.ToString();
     }
 
+    // public void ShowLevelComplete()
+    // {
+    //     if (levelCompletePanel != null)
+    //     {
+    //         levelCompletePanel.SetActive(true);
+    //         Debug.Log("[GameManager] Level Complete Panel ditampilkan");
+
+    //            // Tampilkan score akhir
+    //         if (finalScoreText != null)
+    //             finalScoreText.text = "Score: " + score;
+
+    //         // Hitung dan tampilkan bintang
+    //         UpdateStars();
+
+    //         // Bonus nyawa +1
+    //         playerHealth += 1;
+    //         if (playerHealth > playerMaxHealth)
+    //             playerHealth = playerMaxHealth;
+
+    //         Debug.Log($"[GameManager] Bonus nyawa +1, playerHealth sekarang: {playerHealth}");
+
+
+    //     }
+    // }
+    
     public void ShowLevelComplete()
-    {
-        if (levelCompletePanel != null)
-        {
-            levelCompletePanel.SetActive(true);
-            Debug.Log("[GameManager] Level Complete Panel ditampilkan");
-
-               // Tampilkan score akhir
-            if (finalScoreText != null)
-                finalScoreText.text = "Score: " + score;
-
-            // Hitung dan tampilkan bintang
-            UpdateStars();
-
-            // Bonus nyawa +1
-            playerHealth += 1;
-            if (playerHealth > playerMaxHealth)
-                playerHealth = playerMaxHealth;
-
-            Debug.Log($"[GameManager] Bonus nyawa +1, playerHealth sekarang: {playerHealth}");
-
-         
-        }
-    }
-    private void UpdateStars()
 {
-    int starCount = playerHealth;  // langsung sesuai jumlah nyawa
-
-    // Pastikan starCount tidak lebih dari 3 dan tidak kurang dari 1
-    starCount = Mathf.Clamp(starCount, 1, 3);
-
-    Debug.Log($"[GameManager] Bintang yang didapat: {starCount}");
-
-    // Update gambar bintang
-    for (int i = 0; i < starImages.Length; i++)
+    if (levelCompletePanel != null)
     {
-        if (starImages[i] != null)
-            starImages[i].sprite = (i < starCount) ? filledStar : emptyStar;
+        levelCompletePanel.SetActive(true);
+        Debug.Log("[GameManager] Level Complete Panel ditampilkan");
+
+        // Pause game
+        Time.timeScale = 0;
+
+        // Tampilkan score akhir
+        if (finalScoreText != null)
+            finalScoreText.text = "Score: " + score;
+
+        // Hitung dan tampilkan bintang
+        UpdateStars();
+
+        // Bonus nyawa +1
+        playerHealth += 1;
+        if (playerHealth > playerMaxHealth)
+            playerHealth = playerMaxHealth;
+
+        Debug.Log($"[GameManager] Bonus nyawa +1, playerHealth sekarang: {playerHealth}");
     }
 }
+
+    private void UpdateStars()
+    {
+        int starCount = playerHealth;  // langsung sesuai jumlah nyawa
+
+        // Pastikan starCount tidak lebih dari 3 dan tidak kurang dari 1
+        starCount = Mathf.Clamp(starCount, 1, 3);
+
+        Debug.Log($"[GameManager] Bintang yang didapat: {starCount}");
+
+        // Update gambar bintang
+        for (int i = 0; i < starImages.Length; i++)
+        {
+            if (starImages[i] != null)
+                starImages[i].sprite = (i < starCount) ? filledStar : emptyStar;
+        }
+    }
 
 
 

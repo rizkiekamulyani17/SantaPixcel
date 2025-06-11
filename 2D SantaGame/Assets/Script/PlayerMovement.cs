@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -28,6 +27,12 @@ public class PlayerMovement : MonoBehaviour
     private int jumpCounter = 0;
     [SerializeField] private int maxJumpCount = 2;
 
+    [Header("Knockback")]
+    public float knockbackForceX = 5f;
+    public float knockbackForceY = 5f;
+    public float knockbackDuration = 0.3f;
+    private bool isKnockbacked = false;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -40,10 +45,8 @@ public class PlayerMovement : MonoBehaviour
     private void OnEnable()
     {
         playerController.Enable();
-
         playerController.Movement.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
         playerController.Movement.Move.canceled += ctx => moveInput = Vector2.zero;
-
         playerController.Movement.Jump.performed += ctx => Jump();
     }
 
@@ -54,7 +57,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        // Input handling
+        if (Time.timeScale == 0) return;  // Hentikan movement saat pause
         if (Application.isMobilePlatform)
         {
             moveInput = new Vector2(mobileInputX, 0f);
@@ -64,7 +67,6 @@ public class PlayerMovement : MonoBehaviour
             moveInput = playerController.Movement.Move.ReadValue<Vector2>();
         }
 
-        // Reset jumpCounter when grounded
         if (isGrounded())
         {
             jumpCounter = 0;
@@ -73,15 +75,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Vector2 targetVelocity = new Vector2((moveInput.x + mobileInputX) * moveSpeed, rb.velocity.y);
-        rb.velocity = targetVelocity;
+        if (Time.timeScale == 0) return;  // Hentikan movement saat pause
+        if (!isKnockbacked)
+        {
+            Vector2 targetVelocity = new Vector2((moveInput.x + mobileInputX) * moveSpeed, rb.velocity.y);
+            rb.velocity = targetVelocity;
+        }
         UpdateAnimation();
     }
 
     private void UpdateAnimation()
     {
         MovementState state;
-
         float horizontal = moveInput.x != 0 ? moveInput.x : mobileInputX;
 
         if (horizontal > 0f)
@@ -118,26 +123,32 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-        if (jumpCounter < maxJumpCount)
+        if (jumpCounter < maxJumpCount && !isKnockbacked)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             jumpCounter++;
         }
     }
 
+    // Knockback Method
+    public void ApplyKnockback(Transform enemy)
+    {
+        isKnockbacked = true;
+        rb.velocity = Vector2.zero;
+
+        Vector2 direction = (transform.position.x < enemy.position.x) ? Vector2.left : Vector2.right;
+        rb.AddForce(new Vector2(direction.x * knockbackForceX, knockbackForceY), ForceMode2D.Impulse);
+        StartCoroutine(ResetKnockback());
+    }
+
+    private IEnumerator ResetKnockback()
+    {
+        yield return new WaitForSeconds(knockbackDuration);
+        isKnockbacked = false;
+    }
+
     // === MOBILE BUTTONS ===
-    public void MoveRight(bool isPressed)
-    {
-        mobileInputX = isPressed ? 1f : 0f;
-    }
-
-    public void MoveLeft(bool isPressed)
-    {
-        mobileInputX = isPressed ? -1f : 0f;
-    }
-
-    public void MobileJump()
-    {
-        Jump(); // Sama seperti di keyboard
-    }
+    public void MoveRight(bool isPressed) => mobileInputX = isPressed ? 1f : 0f;
+    public void MoveLeft(bool isPressed) => mobileInputX = isPressed ? -1f : 0f;
+    public void MobileJump() => Jump();
 }

@@ -15,6 +15,7 @@ public class LoadScene : MonoBehaviour
         Application.Quit();
         Debug.Log("Quit Game");
     }
+
     public void paused()
     {
         Time.timeScale = 0;
@@ -22,6 +23,16 @@ public class LoadScene : MonoBehaviour
 
     public void played()
     {
-       Time.timeScale = 1; 
+        Time.timeScale = 1;
+    }
+
+    public void RestartGame()
+    {
+        // Pastikan timeScale kembali normal
+        Time.timeScale = 1;
+
+        // Ambil scene yang sedang aktif, lalu muat ulang
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.name);
     }
 }
